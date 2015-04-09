@@ -1,0 +1,50 @@
+% Created 2015-03-30 Mon 15:10
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{hyperref}
+
+
+\title{`\#SBATCH --job-name=RUN$_{\mathrm{CREATE}}$\_{}CRIS\_{}RTP}
+\author{Steven Buczkowski}
+\date{30 March 2015}
+
+\begin{document}
+
+\maketitle
+
+\setcounter{tocdepth}{3}
+\tableofcontents
+\vspace*{1cm}
+
+
+
+MATLAB=/usr/cluster/matlab/2014b/bin/matlab
+MATOPT=' -nojvm -nodisplay -nosplash'
+
+RTP$_{\mathrm{PROD2\}}$=\~{}/git/rtp$_{\mathrm{prod2\}}$
+
+srun \$MATLAB \$MATOPTS -r ``addpath(genpath('\$RTP$_{\mathrm{PROD2\}}$')); run$_{\mathrm{cris}}$\_{}batch; exit''
+    
+
+
+function run$_{\mathrm{cris}}$\_{}batch()
+
+addpath(genpath('/home/sbuczko1/git/rtp$_{\mathrm{prod2\}}$'));
+
+slurmindex = str2num(getenv('SLURM$_{\mathrm{ARRAY}}$\_{}TASK\_{}ID'));
+[status, infile] = system(sprintf('sed -n ``\%dp'' \~{}/cris-files-process.txt | \ldots{}
+                                   tr -d ``\n''', slurmindex));
+
+outpath='/asl/data/rtp$_{\mathrm{cris}}$\_{}slb';
+[path, name, ext] = fileparts(infile);
+outfile = fullfile(outpath, [strrep(name, `SDR', `rtp') `.rtp']);
+
+create$_{\mathrm{cris}}$\_{}ccast\_{}hires\_{}rtp(infile, outfile)
+
+end
+
+
+\end{document}

@@ -1,0 +1,46 @@
+#BEGIN_SRC sh :exports code
+#!/bin/bash
+
+# sbatch options
+`#SBATCH --job-name=RUN_CREATE_CRIS_RTP
+# partition = dev/batch
+#SBATCH --partition=batch
+# qos = short/normal/medium/long/long_contrib
+#SBATCH --qos=short
+#SBATCH --account=pi_strow
+#SBATCH -N1
+#SBATCH --mem-per-cpu=18000
+#SBATCH --cpus-per-task 1
+#SBATCH --time=00:40:00
+
+#SBATCH --array=1-540:50
+
+# matlab options
+MATLAB=/usr/cluster/matlab/2014b/bin/matlab
+MATOPT=' -nojvm -nodisplay -nosplash'
+
+RTP_PROD2=~/git/rtp_prod2
+
+srun $MATLAB $MATOPT -r "addpath(genpath('$RTP_PROD2')); run_cris_batch; exit"
+    
+#END_SRC
+
+
+#BEGIN_SRC matlab :exports code
+function run_cris_batch()
+
+addpath(genpath('/home/sbuczko1/git/rtp_prod2'));
+
+slurmindex = str2num(getenv('SLURM_ARRAY_TASK_ID'));
+[status, infile] = system(sprintf('sed -n "%dp" ~/cris-files-process.txt | ...
+                                   tr -d "\n"', slurmindex));
+
+outpath='/asl/data/rtp_cris_slb';
+[path, name, ext] = fileparts(infile);
+outfile = fullfile(outpath, [strrep(name, 'SDR', 'rtp') '.rtp']);
+
+create_cris_ccast_hires_rtp(infile, outfile)
+
+end
+
+#END_SRC
